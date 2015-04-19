@@ -54,7 +54,9 @@ header ( "Content-Type: text/html; charset=utf-8" );
 //header ( "Content-Type: application/json; charset=utf-8" );
 $rl = new LogAnalysis ();
 //$dir = "C:\Users\N010D90001\Downloads\0315.log";
-$files = array ('C:\Users\N010D90001\Downloads\0315.log');
+$strfilename = 'C:\Users\二东\Downloads\0315.log';
+$fileName = iconv('UTF-8','GBK',$strfilename);
+$files = array ($fileName);
 // Open a known directory, and proceed to read its contents
 
 // if (is_dir ( $dir )) {
@@ -80,7 +82,7 @@ $html = <<<HTML
 <style type="text/css">
 body {font-size: 12px; font-family: Arial, Helvetica, sans-serif; }
 table#dd {background-color: #6CADD9;white-space:nowrap;}
-table#dd thead th {background-color: #6CADD9;color: #FFFFFF;font-size: 12px;}
+table#dd thead th {background-color: #6CADD9;color: #FFFFFF;font-size: 12px;text-align:center;}
 table#dd td {padding: 6px;width: 120px;}
 table#dd tbody.tb1 td {background-color: #FFFFFF;}
 table#dd tbody.tb2 td {background-color: #F7F7F7;}
