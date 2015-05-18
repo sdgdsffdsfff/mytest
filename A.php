@@ -26,5 +26,4 @@ $o->sayWorld();
 $o->sayExclamationMark();
 $a= 2E+15 +123124;
 $num = number_format($a,0,'','');//后面三个参数为空
-echo $num; //输出“123132231234230000”
-
+//echo $num; //输出“123132231234230000”

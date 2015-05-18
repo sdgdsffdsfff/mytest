@@ -2,7 +2,22 @@
 define ( 'APPID', '61f8o88g50rrpmzeu9fep3v5z44j0pve8wqqzf82hspqcp2h' );
 define ( 'APPKEY', 'k3mmc3apquj914lmjmrxrpoaogq4u1klwhpg57dzjxomplcd' );
 define ( 'MASTERKEY', 'xwszglw01mim4z66r2q0exa35ondetsfedwz56m3d1en4k9u' );
-define ( 'PUSH', '551e5ff8e4b01ae283a60372' );
+define ( 'PUSH', 'homelink_fangyuandongtai' );
+//define ( 'PUSH', 'homelink_house' );
+//define ( 'PUSH', 'homelink_community' );
+public function actionGetHeaderSign() {
+    $clientId = AccountModel::getClientId ();
+    if (empty ( $clientId )) {
+        return ApiError::error ( ApiError::INVALID_ACCESS_TOKEN_NO, ApiError::INVALID_ACCESS_TOKEN_INFO );
+    }
+    $result = array (
+            'errno' => 0
+    );
+    $masterkey = 'xwszglw01mim4z66r2q0exa35ondetsfedwz56m3d1en4k9u';
+    $timestamp = time ();
+    $result ['data'] = sprintf ( '%s,%s,%s', md5 ( $timestamp . $masterkey ), $timestamp, 'master' );
+    return $result;
+}
 function sign() {
     $timestamp = time ();
     return sprintf ( '%s,%s,%s', md5 ( $timestamp . MASTERKEY ), $timestamp, 'master' );
@@ -191,6 +206,7 @@ function createConv($userId) {
 function queryUserConv($userId) {
     $url = 'https://leancloud.cn/1.1/classes/_Conversation?where=' . urlencode ( '{"c":"' . PUSH . '","m":["' . PUSH . '","' . $userId . '"]}' );
     // $getArray = 'where={"playerName":"Sean Plott","cheatMode":false}';
+
     $conv = sendRequest ( $url, 'GET', array () );
     return json_decode ( $conv, 1 );
 }
@@ -259,12 +275,21 @@ function getUserId($username) {
     return $userArr ['results'] [0] ['objectId'];
 }
 function sendMessage() {
-    $userId = getUserId ( '2dong' );
+    //$userId = getUserId ( '2dong' );
+    $userId = '2000000000940912';
+    //$userId = '2000000000917606';
+    if(1){
+        $text ='小区动态：homelink_house';
+        $type ='house';
+    }else{
+        $text ='房源动态：homelink_community';
+        $type='community';
+    }
     $msg = array (
-            '_lctype' => - 1,
-            '_lctext' => '你好sadfdsafdsafsd',
+            '_lctype' => -1,
+            '_lctext' => $text,
             '_lcattrs' => array (
-                    'a' => '_lcattrs 是用来存储用户自定义的一些键值对' 
+                    'm_type' => $type
             ) 
     );
     sendMessageToUser ( $msg, $userId );

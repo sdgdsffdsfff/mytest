@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/LogAnalysis1.php';
+require __DIR__ . '/LogAnalysis.php';
 require __DIR__ . '/PHPMailer/class.phpmailer.php';
 require __DIR__ . '/PHPMailer/class.smtp.php';
 function sendMail($subject, $content, $address = '') {
@@ -49,31 +49,14 @@ function sendMail($subject, $content, $address = '') {
     // shell_exec("rm $tarName");
     // shell_exec("rm $filename");
 }
-
-header ( "Content-Type: text/html; charset=utf-8" );
-//header ( "Content-Type: application/json; charset=utf-8" );
-$rl = new LogAnalysis ();
-//$dir = "C:\Users\N010D90001\Downloads\0315.log";
-$strfilename = 'C:\Users\二东\Downloads\0315.log';
-$fileName = iconv('UTF-8','GBK',$strfilename);
-$files = array ($fileName);
-// Open a known directory, and proceed to read its contents
-
-// if (is_dir ( $dir )) {
-//     if ($dh = opendir ( $dir )) {
-//         while ( ($file = readdir ( $dh )) !== false ) {
-//             if ($file == '.' || $file == '..') {
-//                 continue;
-//             }
-//             $files [] = $dir . $file;
-//         }
-//         closedir ( $dh );
-//     }
-// }
-
-$logdate = $rl->getLogDate ( $files [0] );
-$title = '掌上链家API日志统计 ' . $logdate;
-$html = <<<HTML
+function toMail($strfilename){
+    $rl = new LogAnalysis ();
+    $fileName = iconv('UTF-8','GBK',$strfilename);
+    $files = array ($fileName);
+    
+    $logdate = $rl->getLogDate ( $files [0] );
+    $title = '掌上链家API日志统计 ' . $logdate;
+    $html = <<<HTML
 <html>
         <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -93,16 +76,69 @@ center {font-size: 24px;margin:50px}
 <body>
 <center>$title</center>
 HTML;
+    
+    $arr = $rl->getContentFromFile ( $files );
+    ksort($arr);
+    
+    $html .= $rl->arrayToTable ( $arr );
+    $html . '</body></html>';
 
-$arr = $rl->getContentFromFile ( $files );
-ksort($arr);
+    // $fp = fopen ( 'API日志分析.html', 'w' ); // 打开要写入的文件
+    // fwrite ( $fp, $html ); // 写入
+    // fclose ( $fp ); // 关闭文件
+    
+    sendMail ( $title, $html );
+}
+function toHTML($strfilename){
+    $rl = new LogAnalysis ();
+    //$dir = "C:\Users\N010D90001\Downloads\0315.log";
+    $fileName = iconv('UTF-8','GBK',$strfilename);
+    $files = array ($fileName);
+    
+    $logdate = $rl->getLogDate ( $files [0] );
+    $title = '掌上链家API日志统计 ' . $logdate;
+    $html = <<<HTML
+<html>
+        <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>$title</title>
+        </head>
+<style type="text/css">
+body {font-size: 12px; font-family: Arial, Helvetica, sans-serif; }
+table#dd {background-color: #6CADD9;white-space:nowrap;}
+table#dd thead th {background-color: #6CADD9;color: #FFFFFF;font-size: 12px;text-align:center;}
+table#dd td {padding: 6px;width: 120px;}
+table#dd tbody.tb1 td {background-color: #FFFFFF;}
+table#dd tbody.tb2 td {background-color: #F7F7F7;}
+table#dd tbody td:hover {background-color: #BFEDF9;}
+table#dd tbody td ul {list-style-type:none;margin:0px;padding:0px;}
+center {font-size: 24px;margin:50px}
+</style>
+<body>
+<center>$title</center>
+HTML;
+    
+    $arr = $rl->getContentFromFile ( $files );
+    ksort($arr);
+    
+    $html .= $rl->arrayToTable ( $arr );
+    $html . '</body></html>';
+    header ( "Content-Type: text/html; charset=utf-8" );
+    echo $html;
+}
 
-$html .= $rl->arrayToTable ( $arr );
-$html . '</body></html>';
- echo $html;
-// $fp = fopen ( 'API日志分析.html', 'w' ); // 打开要写入的文件
-// fwrite ( $fp, $html ); // 写入
-// fclose ( $fp ); // 关闭文件
+function toJSON($strfilename){
+    $rl = new LogAnalysis ();
 
-//sendMail ( $title, $html );
+    $fileName = iconv('UTF-8','GBK',$strfilename);
+    $files = array ($fileName);
+
+    $arr = $rl->getContentFromFile ( $files );
+    ksort($arr);
+    header ( "Content-Type: application/json; charset=utf-8" );
+    echo json_encode($arr);
+}
+$strfilename = 'C:\Users\N010D90001\Downloads\moapi.log';
+set_time_limit(0);
+toHTML($strfilename);
 

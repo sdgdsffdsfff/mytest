@@ -30,11 +30,11 @@ echo $a->total();
 $b=new Cart();
 $b->addLine($a);
 echo $b->calcTotal();
-echo date('Y-m-d H:i:s');
+echo date('Y-m-d H:i:s',strtotime('-1 day'));
 
-var_dump('  123fg456'==123);
-var_dump('some string' == 0);
-var_dump(123.0 == '123d456');
-var_dump(0 == "a");
-var_dump("1" == "01");
-var_dump("1" == "1e0");
+// var_dump('  123fg456'==123);
+// var_dump('some string' == 0);
+// var_dump(123.0 == '123d456');
+// var_dump(0 == "a");
+// var_dump("1" == "01");
+// var_dump("1" == "1e0");

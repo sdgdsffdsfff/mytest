@@ -54,17 +54,50 @@ class Sogou {
     }
     // 小学信息
     private $query1 = <<<SQL1
-select id,school_name, school_alias,places_rule,avail_year,
-            address,phone,label,school_grade,
-            case when lng >0 then lng 
-			    	when longitude>0 then longitude
+select a.id,a.school_name, a.school_alias,a.places_rule,a.avail_year,b.bd_name,c.bbd_name,
+            a.address,a.phone,a.label,a.school_grade,
+            case when a.lng >0 then a.lng 
+			    	when a.longitude>0 then a.longitude
 			end as longitude,
-            case when lat >0 then lat 
-					when latitude>0 then latitude
+            case when a.lat >0 then a.lat 
+					when a.latitude>0 then a.latitude
 			end as latitude,
-            min_aver_price,max_aver_price,city_id
-from era_school_district_info 
+            a.min_aver_price,a.max_aver_price,a.city_id
+from era_school_district_info a left join district b on a.bd_id=b.id
+left join district_business c on a.bbd_id=c.id
 where shcool_grade_type=1
+and school_name not
+    in('南京树人国际学校',
+'南京宁海中学分校',
+'青岛市崂山区育才学校',
+'79中学',
+'大连市实验中学',
+'南京第三初级中学',
+'大连市第八十中学',
+'大连市汇文中学',
+'大连市第39中学',
+'南京工业大学附属中学',
+'成都高新实验中学',
+'杭州市丰潭中学',
+'21中学',
+'fasd',
+'成都市棕北中学',
+'法师的法师打发士大夫',
+'朝晖中学',
+'杭十五中教育集团西溪中学',
+'南京金陵汇文中学',
+'成都西川中学',
+'南京大学附属中学',
+'北京第二十中学永泰校区',
+'华才中学',
+'北京市海淀区十一学校一分校',
+'北京市三里屯一中百子园校区',
+'北京二中亦庄分校',
+'教育学院丰台分院附属学校',
+'北京市八一学校',
+'师范大学三帆中学朝阳学校',
+'怡海花园八中怡海分校'
+            )
 SQL1;
     // 小学周边幼儿园
     private $query2 = <<<SQL2
@@ -150,7 +183,9 @@ SQL;
                     'position' => $position,
                     'min_aver_price' => $school ['min_aver_price'],
                     'max_aver_price' => $school ['max_aver_price'],
-                    'education_code' => $school ['school_alias'] 
+                    'education_code' => $school ['school_alias'],
+                    'district_name' => $school ['bd_name'],
+                    'bizcircle_name' => $school ['bbd_name'] 
             );
         }
         return $result;
@@ -208,7 +243,6 @@ SQL;
         }
         return $result;
     }
-
     private function getCommPic($query) {
         $commPics = self::queryArray ( $query );
         $result = array ();
@@ -236,11 +270,11 @@ SQL;
             // 小学特色
             $feature = '';
             if ($school ['pfeature']) {
-                $fea=array();
-                foreach(explode ( ',', $school ['pfeature'] ) as $f){
-                    $fea[]=$features[$f];
+                $fea = array ();
+                foreach ( explode ( ',', $school ['pfeature'] ) as $f ) {
+                    $fea [] = $features [$f];
                 }
-                $feature = implode(';', $fea);
+                $feature = implode ( ';', $fea );
             }
             // 周边幼儿园
             $kindergarten = '';
@@ -273,10 +307,12 @@ SQL;
                     'school_id' => $id,
                     'school_related_resblock_id' => $community,
                     'school_info' => array (
+                            'district_name' => $school ['district_name'],
+                            'bizcircle_name' => $school ['bizcircle_name'],
                             'organization_names' => $school ['name'],
                             'education_code' => $school ['education_code'],
                             'settle_limit' => $school ['settleyear'],
-                            'total_limit' => isset($school ['settlequota']) ? self::$QUOTA [$school ['settlequota']] : '',
+                            'total_limit' => isset ( $school ['settlequota'] ) ? self::$QUOTA [$school ['settlequota']] : '',
                             'address' => $school ['paddress'],
                             'phone' => $school ['ptele'],
                             'pfeature' => $feature,

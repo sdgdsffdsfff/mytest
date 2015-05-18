@@ -63,7 +63,12 @@ class LogAnalysis {
             } else {
                 $e = strlen ( $ua );
             }
-            return substr ( $ua, $s1, $e - $s1 );
+            $version = substr ( $ua, $s1, $e - $s1 );
+            // 以#号开头的版本号是测试，不作统计
+            if (strpos ( $version, '#' ) === 0) {
+                return '';
+            }
+            return $version;
         }
     }
     function getErrorDetail($errDetail) {
@@ -113,21 +118,21 @@ class LogAnalysis {
         $osHead .= '</tr>';
         $filedHead .= '</tr>';
         
-        return '<thead><tr><th rowspan="3">API名称</th>' . $filedHead . $osHead . $verHead . '</thead>';
+        return '<thead><tr><th rowspan="3">' . self::API_NAME . '</th>' . $filedHead . $osHead . $verHead . '</thead>';
     }
     function arrayToTable($arr) {
         $html = '<table id="dd" >';
-        $html .= $this->getTabelHead();
+        $html .= $this->getTabelHead ();
         $html .= '<tbody class="tb1">';
         foreach ( $this->allAPI as $apiKey => $apiValue ) {
             $html .= '<tr>';
             $html .= '<td>' . $apiKey . '</td>';
-            foreach ( self::$fields as $field=>$fieldName ) {
-                if(empty($fieldName)){
+            foreach ( self::$fields as $field => $fieldName ) {
+                if (empty ( $fieldName )) {
                     continue;
                 }
-            foreach ( $this->allOS as $osKey => $osValue ) {
-                foreach ( $this->allVer as $verKey => $verValue ) {
+                foreach ( $this->allOS as $osKey => $osValue ) {
+                    foreach ( $this->allVer as $verKey => $verValue ) {
                         $html .= '<td>' . $arr [$apiKey] [$osKey] [$verKey] [$field] . '</td>';
                     }
                 }
@@ -137,11 +142,35 @@ class LogAnalysis {
         $html .= '</tbody></table>';
         return $html;
     }
+    function arrayToTable1($arr) {
+        $html = '<table id="dd" >';
+        // $html .= $this->getTabelHead();
+        $html .= '<tbody class="tb1">';
+        
+        foreach ( $arr as $apiKey => $apiValue ) {
+            $osrowspan = 0;
+            $osrow='';
+            foreach ( $apiValue as $osKey => $osValue ) {
+                $verrowspan = 0;
+                $verrow='';
+                foreach ( $osValue as $verKey => $verValue ) {
+                    $osrowspan ++;
+                    $verrowspan ++;
+                    $verrow .= '<tr><td>'.$verKey.'</td><td>' . $verValue [self::ERROR_INFO] . '</td></tr>';
+                }
+                $osrow.='<tr><td rowspan = "'.$verrowspan.'">'.$osKey.'</td>'.substr($verrow,4);
+            }
+                $apirow='<tr><td rowspan = "'.$osrowspan.'">'.$apiKey.'</td>'.substr($osrow,4);
+                $html .=$apirow;
+        }
+        $html .= '</tbody></table>';
+        return $html;
+    }
     public function getContentFromFile($files) {
-        $i = 0;
         $arrAPI = array ();
-        $this->allOS [self::All_OS] = 1;
-        $this->allVer [self::All_VERSION] = 1;
+        $this->allAPI [self::API_TOTAL] = 1;
+        //$this->allOS [self::All_OS] = 1;
+       // $this->allVer [self::All_VERSION] = 1;
         foreach ( $files as $file ) {
             $handle = fopen ( $file, "r" ) or die ( "can\'t open file {$file}" );
             // 循环读取每一行日志
@@ -285,7 +314,7 @@ class LogAnalysis {
                     }
                     if (! empty ( $curVer )) {
                         $this->allVer [$curVer] = 1;
-
+                        
                         // 计算API调用次数
                         if (empty ( $arrAPI [$apiName] [self::All_OS] [$curVer] [self::REQUEST_COUNT] )) {
                             $arrAPI [$apiName] [self::All_OS] [$curVer] [self::REQUEST_COUNT] = 1;
@@ -324,36 +353,30 @@ class LogAnalysis {
                         }
                     }
                 }
-                
-                if ($i > 10000) {
-                    
-                    break;
-                }
-                $i ++;
             }
             fclose ( $handle );
         }
-        
+        $result = array ();
         foreach ( $arrAPI as $apiKey => $apiValue ) {
             foreach ( $this->allOS as $osKey => $osValue ) {
                 foreach ( $this->allVer as $verKey => $verValue ) {
                     if (! empty ( $arrAPI [$apiKey] [$osKey] [$verKey] [self::ERROR_DETAIL] )) {
                         $totalerror = '<ul><li>错误总数:' . $arrAPI [$apiKey] [$osKey] [$verKey] [self::ERROR_COUNT] . '</li>';
                         $errorRate = sprintf ( '<li>错误率: %.4f%%</li>', $arrAPI [$apiKey] [$osKey] [$verKey] [self::ERROR_COUNT] / $arrAPI [$apiKey] [$osKey] [$verKey] [self::REQUEST_COUNT] * 100 );
-                        $arrAPI [$apiKey] [$osKey] [$verKey] [self::ERROR_INFO] = $totalerror . $errorRate . $this->getErrorDetail ( $arrAPI [$apiKey] [$osKey] [$verKey] [self::ERROR_DETAIL] );
+                        $result [$apiKey] [$osKey] [$verKey] [self::ERROR_INFO] = $totalerror . $errorRate . $this->getErrorDetail ( $arrAPI [$apiKey] [$osKey] [$verKey] [self::ERROR_DETAIL] );
                         unset ( $arrAPI [$apiKey] [$osKey] [$verKey] [self::ERROR_DETAIL] );
                     }
                     unset ( $arrAPI [$apiKey] [$osKey] [$verKey] [self::ERROR_COUNT] );
                     unset ( $arrAPI [$apiKey] [$osKey] [$verKey] [self::REQUEST_COUNT] );
                     foreach ( self::$fields as $field => $fileldValue ) {
                         if (empty ( $arrAPI [$apiKey] [$osKey] [$verKey] [$field] ) && ! empty ( $fileldValue )) {
-                            $arrAPI [$apiKey] [$osKey] [$verKey] [$field] = 0;
+                            unset ( $arrAPI [$apiKey] [$osKey] [$verKey] [$field] );
                         }
                     }
                 }
             }
         }
         
-        return $arrAPI;
+        return $result;
     }
 }

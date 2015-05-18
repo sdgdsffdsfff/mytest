@@ -81,3 +81,4 @@ var_dump( reset( $array ) );
     }
 */
 echo date('YmdHis');
+var_dump( '6.1.1'>'6.1.1');
