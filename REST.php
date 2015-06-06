@@ -1,23 +1,30 @@
 <?php
-define ( 'APPID', '61f8o88g50rrpmzeu9fep3v5z44j0pve8wqqzf82hspqcp2h' );
-define ( 'APPKEY', 'k3mmc3apquj914lmjmrxrpoaogq4u1klwhpg57dzjxomplcd' );
-define ( 'MASTERKEY', 'xwszglw01mim4z66r2q0exa35ondetsfedwz56m3d1en4k9u' );
-define ( 'PUSH', 'homelink_fangyuandongtai' );
+// define ( 'APPID', '61f8o88g50rrpmzeu9fep3v5z44j0pve8wqqzf82hspqcp2h' );
+// define ( 'APPKEY', 'k3mmc3apquj914lmjmrxrpoaogq4u1klwhpg57dzjxomplcd' );
+// define ( 'MASTERKEY', 'xwszglw01mim4z66r2q0exa35ondetsfedwz56m3d1en4k9u' );
+// define ( 'PUSH', 'homelink_fangyuandongtai' );
+
+
+define ( 'APPID', '4e1dh2g3tn08i6swaqtperykbrdas2r8xebmusjeucrptsfd' );
+define ( 'APPKEY', 'jcd4alcajl0cp4w7vj6gd8zuib7chk5653dy4biffqgynn4n' );
+define ( 'MASTERKEY', 'yv25r85j2cwfprihs2evx52kb50c36otxo2kpwa319tqamaf' );
+define ( 'PUSH', 'xiaoqudongtai' );
+
 //define ( 'PUSH', 'homelink_house' );
 //define ( 'PUSH', 'homelink_community' );
-public function actionGetHeaderSign() {
-    $clientId = AccountModel::getClientId ();
-    if (empty ( $clientId )) {
-        return ApiError::error ( ApiError::INVALID_ACCESS_TOKEN_NO, ApiError::INVALID_ACCESS_TOKEN_INFO );
-    }
-    $result = array (
-            'errno' => 0
-    );
-    $masterkey = 'xwszglw01mim4z66r2q0exa35ondetsfedwz56m3d1en4k9u';
-    $timestamp = time ();
-    $result ['data'] = sprintf ( '%s,%s,%s', md5 ( $timestamp . $masterkey ), $timestamp, 'master' );
-    return $result;
-}
+//  function actionGetHeaderSign() {
+//     $clientId = AccountModel::getClientId ();
+//     if (empty ( $clientId )) {
+//         return ApiError::error ( ApiError::INVALID_ACCESS_TOKEN_NO, ApiError::INVALID_ACCESS_TOKEN_INFO );
+//     }
+//     $result = array (
+//             'errno' => 0
+//     );
+//     $masterkey = 'xwszglw01mim4z66r2q0exa35ondetsfedwz56m3d1en4k9u';
+//     $timestamp = time ();
+//     $result ['data'] = sprintf ( '%s,%s,%s', md5 ( $timestamp . $masterkey ), $timestamp, 'master' );
+//     return $result;
+// }
 function sign() {
     $timestamp = time ();
     return sprintf ( '%s,%s,%s', md5 ( $timestamp . MASTERKEY ), $timestamp, 'master' );
@@ -134,7 +141,7 @@ function sendRequest($url, $method, $param) {
 // 获取某个应用的聊天记录
 function getChatHistory() {
     $peerid = PUSH;
-    $convid = '552119bbe4b043f1c84c0b7a';
+    $convid = '556e3bf0e4b0f7e4fddfd7b0';
     $nonce = 'bibce';
     $signature_ts = time ();
     $str = sprintf ( '%s:%s:%s:%s:%s', APPID, $peerid, $convid, $nonce, $signature_ts );
@@ -151,7 +158,9 @@ function getChatHistory() {
     $url = 'https://leancloud.cn/1.1/rtm/messages/logs?' . http_build_query ( $param );
     // $url = 'https://leancloud.cn/1.1/rtm/messages/logs?convid=552119bbe4b043f1c84c0b7a';
     $chatHistory = sendRequest ( $url, 'GET', $param );
-    echo $chatHistory;
+    header ( "Content-Type: application/json; charset=utf-8" );
+    var_dump($chatHistory);die; 
+    var_dump(json_decode(( json_decode ( $chatHistory, 1 )[0]['data'])));
     return json_decode ( $chatHistory, 1 );
 }
 function userReg() {
@@ -295,10 +304,11 @@ function sendMessage() {
     sendMessageToUser ( $msg, $userId );
 }
 
-sendMessage ();
+//sendMessage ();
 
 // header ( "Content-Type: text/html; charset=utf-8" );
 // createUpdateInfo();
-//$his = getChatHistory ();
+$his = getChatHistory ();
+
 //pushMessageToUserName ( '2dong' );
 //userReg();

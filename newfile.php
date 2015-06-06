@@ -82,3 +82,8 @@ var_dump( reset( $array ) );
 */
 echo date('YmdHis');
 var_dump( '6.1.1'>'6.1.1');
+$agentCode = null;
+$shareAgent = null;
+$a = array($agentCode,$shareAgent);
+$b = array ('15','16');
+var_dump(array_merge($a,$b));
