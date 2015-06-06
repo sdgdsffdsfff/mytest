@@ -299,7 +299,6 @@ class LogAnalysis {
 
                             $arrAPI [$apiName] [self::ERROR_COUNT] [$curOS] += 1;
                             $arrAPI [self::API_TOTAL] [self::ERROR_COUNT] [$curOS] += 1;
-
                             if ($apiErrorno > 10000 && $apiErrorno < 20000) { // 系统错误
                                 $arrAPI [$apiName] [self::SYS_ERROR_COUNT] [$curOS] += 1;
                                 $arrAPI [self::API_TOTAL] [self::SYS_ERROR_COUNT] [$curOS] += 1;
@@ -355,12 +354,14 @@ class LogAnalysis {
                     $systotalerror = '<ul><li>系统错误总数:' . $v [self::SYS_ERROR_COUNT] [$k1] . '</li>';
                     $apptotalerror = '<ul><li>应用错误总数:' . $v [self::APP_ERROR_COUNT] [$k1] . '</li>';
                     $errorRate = sprintf ( '<li>错误率: %.4f%%</li>', $v [self::ERROR_COUNT] [$k1] / $v [self::REQUEST_COUNT] [$k1] * 100 );
+
                     $sysErrorRate = $v [self::SYS_ERROR_COUNT] [$k1] / $v [self::REQUEST_COUNT] [$k1] * 100;
                     if ($sysErrorRate > 1) {
                         $sysErrorRate = sprintf ( '<li class="redtd">系统错误率: %.4f%%</li>', $sysErrorRate );
                     } else {
                         $sysErrorRate = sprintf ( '<li>系统错误率: %.4f%%</li>', $sysErrorRate );
                     }
+
                     $appErrorRate = sprintf ( '<li>应用错误率: %.4f%%</li>', $v [self::APP_ERROR_COUNT] [$k1] / $v [self::REQUEST_COUNT] [$k1] * 100 );
                     $arrAPI [$k] [self::ERROR_INFO] [$k1] = $totalerror . $errorRate .$systotalerror.$sysErrorRate.$apptotalerror.$appErrorRate. $this->getErrorDetail ( $v [self::ERROR_DETAIL] [$k1] );
                 }
