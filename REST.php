@@ -1,14 +1,14 @@
 <?php
-// define ( 'APPID', '61f8o88g50rrpmzeu9fep3v5z44j0pve8wqqzf82hspqcp2h' );
-// define ( 'APPKEY', 'k3mmc3apquj914lmjmrxrpoaogq4u1klwhpg57dzjxomplcd' );
-// define ( 'MASTERKEY', 'xwszglw01mim4z66r2q0exa35ondetsfedwz56m3d1en4k9u' );
-// define ( 'PUSH', 'homelink_fangyuandongtai' );
+ define ( 'APPID', '61f8o88g50rrpmzeu9fep3v5z44j0pve8wqqzf82hspqcp2h' );
+ define ( 'APPKEY', 'k3mmc3apquj914lmjmrxrpoaogq4u1klwhpg57dzjxomplcd' );
+ define ( 'MASTERKEY', 'xwszglw01mim4z66r2q0exa35ondetsfedwz56m3d1en4k9u' );
+ define ( 'PUSH', 'homelink_fangyuandongtai' );
 
 
-define ( 'APPID', '4e1dh2g3tn08i6swaqtperykbrdas2r8xebmusjeucrptsfd' );
-define ( 'APPKEY', 'jcd4alcajl0cp4w7vj6gd8zuib7chk5653dy4biffqgynn4n' );
-define ( 'MASTERKEY', 'yv25r85j2cwfprihs2evx52kb50c36otxo2kpwa319tqamaf' );
-define ( 'PUSH', 'xiaoqudongtai' );
+//define ( 'APPID', '4e1dh2g3tn08i6swaqtperykbrdas2r8xebmusjeucrptsfd' );
+//define ( 'APPKEY', 'jcd4alcajl0cp4w7vj6gd8zuib7chk5653dy4biffqgynn4n' );
+//define ( 'MASTERKEY', 'yv25r85j2cwfprihs2evx52kb50c36otxo2kpwa319tqamaf' );
+//define ( 'PUSH', 'xiaoqudongtai' );
 
 //define ( 'PUSH', 'homelink_house' );
 //define ( 'PUSH', 'homelink_community' );
@@ -109,9 +109,9 @@ function sendRequest($url, $method, $param) {
         curl_setopt ( $ch, CURLOPT_POSTFIELDS, json_encode ( $param ) );
     }
     if ($method == 'GET') {
-        // $buildurl = $url.'?'.http_build_query( $param );
+         $buildurl = $url.'?'. http_build_query($param) ;
         // $buildurl ='https://leancloud.cn/1.1/rtm/messages/logs?convid=551e3563e4b043f1c8332315&peerid=PUSH&nonce=bibce&signature_ts=1428123525&signature=a7e111140d3ddbcf424cd7910bd0fe6be00e3fd4';
-        // curl_setopt ( $ch, CURLOPT_URL, $buildurl );
+        curl_setopt ( $ch, CURLOPT_URL, $buildurl );
         curl_setopt ( $ch, CURLOPT_POST, 0 );
     }
     // 抓取URL并把它传递给浏览器
@@ -159,8 +159,6 @@ function getChatHistory() {
     // $url = 'https://leancloud.cn/1.1/rtm/messages/logs?convid=552119bbe4b043f1c84c0b7a';
     $chatHistory = sendRequest ( $url, 'GET', $param );
     header ( "Content-Type: application/json; charset=utf-8" );
-    var_dump($chatHistory);die; 
-    var_dump(json_decode(( json_decode ( $chatHistory, 1 )[0]['data'])));
     return json_decode ( $chatHistory, 1 );
 }
 function userReg() {
@@ -304,11 +302,65 @@ function sendMessage() {
     sendMessageToUser ( $msg, $userId );
 }
 
+function queryConv() {
+    //$url = 'https://leancloud.cn/1.1/classes/_Conversation?where=' . urlencode ( '{"updatedAt":""}' );
+    $url = 'https://leancloud.cn/1.1/classes/_Conversation';
+    //'where={"updatedAt":{"$gte":{"__type":"Date","iso":"2015-06-29T00:00:00.000Z"},"$lt":{"__type":"Date","iso":"2015-06-30T00:00:00.000Z"}}}'
+    $conditions = array(
+            "updatedAt" => array(
+                    "\$gte" => array(
+                        "__type" => "Date",
+                        "iso" => "2015-07-29T09:00:00.000Z"
+                    ),
+                    "\$lt" => array(
+                        "__type" => "Date",
+                        "iso" => "2015-07-29T11:00:00.000Z"
+                    )
+            )
+        );
+
+    //TODO:需要分页吗？
+    $params = array( "where" => json_encode($conditions), "keys" => "objectId" );
+
+    $conv = sendRequest ( $url, 'GET', $params );
+    return json_decode ( $conv, 1 );
+}
+function getChatHistory($peerid, $convid) {
+    $nonce = 'bibce';
+    $signature_ts = time ();
+    $str = sprintf ( '%s:%s:%s:%s:%s', APPID, $peerid, $convid, $nonce, $signature_ts );
+    $signature = sha1sign ( $str );
+    $param = array (
+            'convid' => $convid,
+            'peerid' => $peerid,
+            'nonce' => $nonce,
+            'signature_ts' => $signature_ts,
+            'signature' => $signature,
+            'limit' => 10
+    );
+
+    $url = 'https://leancloud.cn/1.1/rtm/messages/logs?' . http_build_query ( $param );
+    // $url = 'https://leancloud.cn/1.1/rtm/messages/logs?convid=552119bbe4b043f1c84c0b7a';
+    $chatHistory = sendRequest ( $url, 'GET', $param );
+    header ( "Content-Type: application/json; charset=utf-8" );
+    return json_decode ( $chatHistory, 1 );
+}
+$a = queryConv();
+if(empty($a["results"])) {
+    die("no conversation found");
+}
+foreach($a["results"] as $v) {
+    if(!empty($v["objectId"])){
+        echo $v["objectId"];
+    }
+}
+ header ( "Content-Type: application/json; charset=utf-8" );
+//echo json_encode($a);
 //sendMessage ();
 
 // header ( "Content-Type: text/html; charset=utf-8" );
 // createUpdateInfo();
-$his = getChatHistory ();
+//$his = getChatHistory ();
 
 //pushMessageToUserName ( '2dong' );
 //userReg();
