@@ -4,29 +4,29 @@ class Sogou {
             0 => '一房一名额',
             1 => '无名额限制',
             2 => '不对外招生',
-            - 1 => '' 
+            - 1 => ''
     );
     static $TYPE = array (
             0 => '普通',
             1 => '市重点',
-            2 => '区重点' 
+            2 => '区重点'
     );
     static $TYPEID = array (
             0 => '2',
             1 => '0',
-            2 => '1' 
+            2 => '1'
     );
     private function arrToXml($arr, $dom = 0, $item = 0, $itemname = 'item') {
         if (! $dom) {
             $dom = new DOMDocument ( "1.0", 'gbk' );
             $dom->formatOutput = true;
         }
-        
+
         if (! $item) {
             $item = $dom->createElement ( "DOCUMENT" );
             $dom->appendChild ( $item );
         }
-        
+
         foreach ( $arr as $key => $val ) {
             if (is_string ( $key ) && $key == 'pmschool') {
                 $itemx = $item;
@@ -56,10 +56,10 @@ class Sogou {
     private $query1 = <<<SQL1
 select a.id,a.school_name, a.school_alias,a.places_rule,a.avail_year,b.bd_name,c.bbd_name,
             a.address,a.phone,a.label,a.school_grade,
-            case when a.lng >0 then a.lng 
+            case when a.lng >0 then a.lng
 			    	when a.longitude>0 then a.longitude
 			end as longitude,
-            case when a.lat >0 then a.lat 
+            case when a.lat >0 then a.lat
 					when a.latitude>0 then a.latitude
 			end as latitude,
             a.min_aver_price,a.max_aver_price,a.city_id
@@ -122,28 +122,28 @@ where type=1
 SQL;
     // 对应小区
     private $query5 = <<<SQL
-select distinct a.id,b.community_code 
-from era_school_district_info a join era_school_building_relation b on a.id=b.school_id 
-where shcool_grade_type=1 
+select distinct a.id,b.community_code
+from era_school_district_info a join era_school_building_relation b on a.id=b.school_id
+where shcool_grade_type=1
 SQL;
     // 小学图片
     private $query6 = <<<SQL
 select sid id,max(pic_big_path) pic
-from era_agent_school_pic 
+from era_agent_school_pic
 where cid in(
 SELECT max(cid)
-FROM `era_agent_school_pic` 
+FROM `era_agent_school_pic`
 group by sid)
 and pic_big_path like '%uploadfile%'
 group by sid
 SQL;
     // 小区图片
     private $query7 = <<<SQL
-select b.community_code,max(c.pic_list_path) pic 
-from era_school_district_info a 
-join era_school_building_relation b on a.id=b.school_id 
+select b.community_code,max(c.pic_list_path) pic
+from era_school_district_info a
+join era_school_building_relation b on a.id=b.school_id
 join community_pic c on b.community_code = c.community_code
-where shcool_grade_type=1 
+where shcool_grade_type=1
 group by a.id,b.community_code
 SQL;
     private function queryArray($query) {
@@ -151,9 +151,9 @@ SQL;
         $link = mysqli_connect ( "172.30.0.20:5000", "prod", "123456", "homelink" ) or die ( "Error " . mysqli_error ( $link ) );
         $link->query ( "SET NAMES utf8" );
         // consultation:
-        
+
         $result = $link->query ( $query ) or die ( "Error in the consult.." . mysqli_error ( $link ) );
-        
+
         $row = mysqli_fetch_array ( $result, MYSQLI_ASSOC );
         $schools = array ();
         while ( $row ) {
@@ -185,7 +185,7 @@ SQL;
                     'max_aver_price' => $school ['max_aver_price'],
                     'education_code' => $school ['school_alias'],
                     'district_name' => $school ['bd_name'],
-                    'bizcircle_name' => $school ['bbd_name'] 
+                    'bizcircle_name' => $school ['bbd_name']
             );
         }
         return $result;
@@ -202,7 +202,7 @@ SQL;
         $middles = self::queryArray ( $query );
         $result = array ();
         $names = array ();
-        
+
         foreach ( $middles as $middle ) {
             $id = $middle ['base_sid'];
             $result [$id] ['name'] [] = $middle ['school_name'];
@@ -210,7 +210,7 @@ SQL;
                     'pmschoolName1' => $middle ['school_name'],
                     'pmtele' => $middle ['phone'],
                     'pmaddress' => $middle ['address'],
-                    'pmtype' => self::$TYPE [$middle ['school_grade']] 
+                    'pmtype' => self::$TYPE [$middle ['school_grade']]
             );
         }
         return $result;
@@ -226,7 +226,7 @@ SQL;
     private function queryCommunities($query) {
         $communities = self::queryArray ( $query );
         $result = array ();
-        
+
         foreach ( $communities as $community ) {
             $id = $community ['id'];
             // $result[$id][]=array($community ['community_code']=>$community ['pic']);
@@ -237,7 +237,7 @@ SQL;
     private function queryPictures($query) {
         $pictures = self::queryArray ( $query );
         $result = array ();
-        
+
         foreach ( $pictures as $picture ) {
             $result [$picture ['id']] = $picture ['pic'];
         }
@@ -257,16 +257,16 @@ SQL;
         $middles = self::queryMiddles ( $this->query3 );
         $features = self::queryFeatures ( $this->query4 );
         $communities = self::queryCommunities ( $this->query5 );
-        $pictures = self::queryPictures ( $this->query6 );
+        //$pictures = self::queryPictures ( $this->query6 );
         $result = array ();
         foreach ( $schools as $id => $school ) {
-            
+
             // 对应小区
             $community = array ();
             if (! empty ( $communities [$id] )) {
                 $community = $communities [$id];
             }
-            
+
             // 小学特色
             $feature = '';
             if ($school ['pfeature']) {
@@ -287,21 +287,21 @@ SQL;
                             'pmschoolName1' => '',
                             'pmtele' => '',
                             'pmaddress' => '',
-                            'pmtype' => '' 
-                    ) 
+                            'pmtype' => ''
+                    )
             );
             $pmschoolNames = '';
             if (! empty ( $middles [$id] )) {
                 $pmschool = $middles [$id] ['info'];
                 $pmschoolNames = implode ( ';', $middles [$id] ['name'] );
             }
-            
+
             // 图片
-            $picture = '';
-            if (! empty ( $pictures [$id] )) {
-                $picture = $pictures [$id];
-            }
-            
+//             $picture = '';
+//             if (! empty ( $pictures [$id] )) {
+//                 $picture = $pictures [$id];
+//             }
+
             $result [] = array (
                     'city_id' => $school ['city_id'],
                     'school_id' => $id,
@@ -318,18 +318,18 @@ SQL;
                             'pfeature' => $feature,
                             'pkindergarten' => $kindergarten,
                             'is_right_academy_school' => $pmschoolNames,
-                            'position' => $school ['position'] 
+                            'position' => $school ['position']
                     ),
-                    
-                    'school_list_picture_url' => $picture,
+
+                    //'school_list_picture_url' => $picture,
                     'school_stat' => array (
                             'unit_price_max' => $school ['max_aver_price'],
-                            'unit_price_min' => $school ['min_aver_price'] 
+                            'unit_price_min' => $school ['min_aver_price']
                     ),
                     'pschoolName' => $school ['name'],
                     'pschooltype' => self::$TYPE [$school ['pschooltypeid']],
                     'pmschool' => $pmschool,
-                    'pschooltypeid' => self::$TYPEID [$school ['pschooltypeid']] 
+                    'pschooltypeid' => self::$TYPEID [$school ['pschooltypeid']]
             );
         }
         return $result;
@@ -359,6 +359,6 @@ SQL;
 header ( 'Content-type: application/json; charset=utf-8' );
 $sougou = new Sogou ();
 $arr = $sougou->writeStringToFile ( 'staticschool.json' );
-$arr = $sougou->writeCommPicToFile ( 'commpic.json' );
+//$arr = $sougou->writeCommPicToFile ( 'commpic.json' );
 
 

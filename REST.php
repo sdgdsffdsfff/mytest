@@ -4,11 +4,10 @@
  define ( 'MASTERKEY', 'xwszglw01mim4z66r2q0exa35ondetsfedwz56m3d1en4k9u' );
  define ( 'PUSH', 'homelink_fangyuandongtai' );
 
-
-//define ( 'APPID', '4e1dh2g3tn08i6swaqtperykbrdas2r8xebmusjeucrptsfd' );
-//define ( 'APPKEY', 'jcd4alcajl0cp4w7vj6gd8zuib7chk5653dy4biffqgynn4n' );
-//define ( 'MASTERKEY', 'yv25r85j2cwfprihs2evx52kb50c36otxo2kpwa319tqamaf' );
-//define ( 'PUSH', 'xiaoqudongtai' );
+// define ( 'APPID', '4e1dh2g3tn08i6swaqtperykbrdas2r8xebmusjeucrptsfd' );
+// define ( 'APPKEY', 'jcd4alcajl0cp4w7vj6gd8zuib7chk5653dy4biffqgynn4n' );
+// define ( 'MASTERKEY', 'yv25r85j2cwfprihs2evx52kb50c36otxo2kpwa319tqamaf' );
+// define ( 'PUSH', 'yezhuweituo' );
 
 //define ( 'PUSH', 'homelink_house' );
 //define ( 'PUSH', 'homelink_community' );
@@ -34,7 +33,7 @@ function sha1sign($str) {
 }
 function _queryLeanCloud($url, array $params = array()) {
     $body = json_encode ( $params );
-    
+
     $ch = curl_init ();
     $opt = array (
             CURLOPT_URL => $url,
@@ -52,30 +51,30 @@ function _queryLeanCloud($url, array $params = array()) {
             CURLOPT_HTTPHEADER => array (
                     "X-AVOSCloud-Application-Id: 61f8o88g50rrpmzeu9fep3v5z44j0pve8wqqzf82hspqcp2h",
                     "X-AVOSCloud-Application-Key: k3mmc3apquj914lmjmrxrpoaogq4u1klwhpg57dzjxomplcd",
-                    "Content-Type: application/json" 
-            ) 
+                    "Content-Type: application/json"
+            )
     );
-    
+
     curl_setopt_array ( $ch, $opt );
-    
+
     $raw = curl_exec ( $ch );
     $errno = curl_errno ( $ch );
-    
+
     if ($errno == CURLE_COULDNT_CONNECT) {
         return false;
     }
-    
+
     if ($errno != CURLE_OK) {
         $errstr = curl_error ( $ch );
         return false;
     }
-    
+
     $code = curl_getinfo ( $ch, CURLINFO_HTTP_CODE );
-    
+
     if ($code != 200) {
         return false;
     }
-    
+
     return true;
 }
 function sendRequest($url, $method, $param) {
@@ -87,7 +86,7 @@ function sendRequest($url, $method, $param) {
             "X-AVOSCloud-Application-Id: " . APPID,
             // "X-AVOSCloud-Application-Key: k3mmc3apquj914lmjmrxrpoaogq4u1klwhpg57dzjxomplcd",
             "X-AVOSCloud-Request-Sign: " . sign (),
-            "Content-Type: application/json" 
+            "Content-Type: application/json"
     );
     // 设置URL和相应的选项
     $opt = array (
@@ -101,7 +100,7 @@ function sendRequest($url, $method, $param) {
             CURLOPT_SSL_VERIFYHOST => 0, // don't verify ssl
             CURLOPT_SSL_VERIFYPEER => FALSE, //
             CURLOPT_VERBOSE => FALSE, //
-            CURLOPT_HTTPHEADER => $headerArr 
+            CURLOPT_HTTPHEADER => $headerArr
     );
     curl_setopt_array ( $ch, $opt );
     if ($method == 'POST') {
@@ -122,15 +121,15 @@ function sendRequest($url, $method, $param) {
         var_dump ( $raw );
         return false;
     }
-    
+
     $code = curl_getinfo ( $ch, CURLINFO_HTTP_CODE );
     if ($code != 200 && $code != 201) {
         var_dump ( $raw );
         return false;
     }
-    
+
     if (empty ( $raw )) {
-        
+
         return false;
     }
     // 关闭cURL资源，并且释放系统资源
@@ -139,37 +138,53 @@ function sendRequest($url, $method, $param) {
 }
 
 // 获取某个应用的聊天记录
-function getChatHistory() {
-    $peerid = PUSH;
-    $convid = '556e3bf0e4b0f7e4fddfd7b0';
+function getChatHistory($from,$to) {
+    $convid = queryConvId($from, $to);
+    if($convid === false){
+        return false;
+    }
     $nonce = 'bibce';
     $signature_ts = time ();
-    $str = sprintf ( '%s:%s:%s:%s:%s', APPID, $peerid, $convid, $nonce, $signature_ts );
+    $str = sprintf ( '%s:%s:%s:%s:%s', APPID, $from, $convid, $nonce, $signature_ts );
     $signature = sha1sign ( $str );
     $param = array (
             'convid' => $convid,
-            'peerid' => $peerid,
+            'peerid' => $from,
             'nonce' => $nonce,
             'signature_ts' => $signature_ts,
             'signature' => $signature,
-            'limit' => 10 
+            'limit' => 10
     );
-    
-    $url = 'https://leancloud.cn/1.1/rtm/messages/logs?' . http_build_query ( $param );
-    // $url = 'https://leancloud.cn/1.1/rtm/messages/logs?convid=552119bbe4b043f1c84c0b7a';
+
+    //$url = 'https://leancloud.cn/1.1/rtm/messages/logs?' . http_build_query ( $param );
+    $url = 'https://leancloud.cn/1.1/rtm/messages/logs?convid='.$convid;
     $chatHistory = sendRequest ( $url, 'GET', $param );
     header ( "Content-Type: application/json; charset=utf-8" );
     return json_decode ( $chatHistory, 1 );
+    $history =  json_decode ( $chatHistory, 1 );
+    $list=array();
+    foreach($history as $h){
+        $data = json_decode($h['data'],1);
+        $lctext = json_decode($data['_lctext'],1);
+        if(empty($lctext)){
+            $lctext =$data['_lctext'];
+        }
+        $data['_lctext'] = $lctext;
+        $h['data'] = $data;
+        $h['timestamp'] = date('Y-m-d H:i:s',$h['timestamp']/1000);
+        $list[] = $h;
+    }
+    return $list;
 }
 function userReg() {
     $url = 'https://leancloud.cn/1.1/users';
     $headerArr = array (
-            'Content-Type' => 'application/json' 
+            'Content-Type' => 'application/json'
     );
     $postArr = array (
             'username' => PUSH,
             'password' => 'abcdefg',
-            'phone' => '415-392-0202' 
+            'phone' => '415-392-0202'
     );
     sendRequest ( $url, 'POST', $postArr );
 }
@@ -188,7 +203,7 @@ function sendMessageToUser($message, $userId) {
             // 'message' => "{\"_lctype\":-1,\"_lctext\":\"这是一个纯文本消息\",\"_lcattrs\":{\"a\":\"_lcattrs 是用来存储用户自定义的一些键值对\"}}",
             'message' => json_encode ( $message ),
             'conv_id' => $convId,
-            'transient' => false 
+            'transient' => false
     );
     sendRequest ( $url, 'POST', $postArr );
 }
@@ -196,26 +211,34 @@ function createConv($userId) {
     $url = 'https://leancloud.cn/1.1/classes/_Conversation';
     $postArr = array (
             'attr' => array (
-                    'type' => 0 
+                    'type' => 0
             ),
             'c' => PUSH,
             // 'im' => date(),
             'm' => array (
                     PUSH,
-                    $userId 
+                    $userId
             ),
-            'mu' => array () 
+            'mu' => array ()
     );
     $conv = sendRequest ( $url, 'POST', $postArr );
-    
+
     return json_decode ( $conv, 1 );
 }
-function queryUserConv($userId) {
-    $url = 'https://leancloud.cn/1.1/classes/_Conversation?where=' . urlencode ( '{"c":"' . PUSH . '","m":["' . PUSH . '","' . $userId . '"]}' );
+function queryConvId($from,$to) {
+    $url = 'https://leancloud.cn/1.1/classes/_Conversation?where=' . urlencode ( '{"c":"' . $from . '","m":["' . $from . '","' . $to . '"]}' );
     // $getArray = 'where={"playerName":"Sean Plott","cheatMode":false}';
 
     $conv = sendRequest ( $url, 'GET', array () );
-    return json_decode ( $conv, 1 );
+    if($conv === false){
+        return false;
+    }
+    $conv = json_decode ( $conv, 1 );
+    $convid = '';
+    if(!empty($conv['results'][0]['objectId'])){
+    $convid=$conv['results'][0]['objectId'];
+    }
+    return $convid;
 }
 function pushMessageToUserName($username) {
     $url = 'https://leancloud.cn/1.1/push';
@@ -231,18 +254,18 @@ function pushMessageToUserName($username) {
                                     'query' => array (
                                             'className' => '_User',
                                             'where' => array (
-                                                    'username' => $username 
-                                            ) 
+                                                    'username' => $username
+                                            )
                                     ),
-                                    'key' => 'installation.objectId' 
-                            ) 
-                    ) 
+                                    'key' => 'installation.objectId'
+                            )
+                    )
             ),
-            
+
             'data' => array (
                     'title' => 'hello',
-                    'alert' => 'Hello From PHP' 
-            ) 
+                    'alert' => 'Hello From PHP'
+            )
     );
     sendRequest ( $url, 'POST', $postArr );
 }
@@ -252,7 +275,7 @@ function createUpdateInfo() {
             'desc' => 'asdf',
             // 'im' => date(),
             'version' => 2.0,
-            'apkUrl' => 'http://www.baidu.com/' 
+            'apkUrl' => 'http://www.baidu.com/'
     );
     $conv = sendRequest ( $url, 'POST', $postArr );
 }
@@ -262,7 +285,7 @@ function createAddRequest() {
             'fromUser' => 'asdf',
             // 'im' => date(),
             'toUser' => 2.0,
-            'status' => 1 
+            'status' => 1
     );
     $conv = sendRequest ( $url, 'POST', $postArr );
 }
@@ -297,7 +320,7 @@ function sendMessage() {
             '_lctext' => $text,
             '_lcattrs' => array (
                     'm_type' => $type
-            ) 
+            )
     );
     sendMessageToUser ( $msg, $userId );
 }
@@ -358,9 +381,13 @@ foreach($a["results"] as $v) {
 //echo json_encode($a);
 //sendMessage ();
 
-// header ( "Content-Type: text/html; charset=utf-8" );
+header ( "Content-Type: application/json; charset=utf-8" );
 // createUpdateInfo();
 //$his = getChatHistory ();
 
+$from = $_GET['from'];
+$to = $_GET['to'];
+$his = getChatHistory ($from,$to);
+echo json_encode($his);
 //pushMessageToUserName ( '2dong' );
 //userReg();
